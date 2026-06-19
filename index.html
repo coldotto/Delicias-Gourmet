@@ -121,8 +121,9 @@ footer{background:var(--bg2);border-top:1px solid var(--borda);padding:2.5rem 0 
 .cart-vazio{text-align:center;padding:3rem 0;color:var(--muted);font-size:.88rem;line-height:1.8}
 .cart-nome-field{padding:.6rem 1.25rem;border-top:1px solid var(--borda)}
 .cart-nome-field label{display:block;font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;font-weight:600}
-.cart-nome-field input{width:100%;padding:.5rem .7rem;background:var(--card2);border:1px solid var(--borda);border-radius:8px;color:var(--texto);font-family:var(--fonte);font-size:.88rem;outline:none;transition:border-color .15s}
-.cart-nome-field input:focus{border-color:var(--vermelho)}
+ .cart-nome-field input,.cart-nome-field select{width:100%;padding:.5rem .7rem;background:var(--card2);border:1px solid var(--borda);border-radius:8px;color:var(--texto);font-family:var(--fonte);font-size:.88rem;outline:none;transition:border-color .15s}
+ .cart-nome-field input:focus,.cart-nome-field select:focus{border-color:var(--vermelho)}
+ .cart-nome-field select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23c9973a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .7rem center;padding-right:2rem;cursor:pointer}
 .cart-foot{padding:.9rem 1.25rem;border-top:1px solid var(--borda)}
 .cart-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem;font-size:.95rem;font-weight:600}
 .cart-total-val{font-family:var(--display);font-size:1.35rem;font-weight:700;color:var(--dourado)}
@@ -139,8 +140,11 @@ footer{background:var(--bg2);border-top:1px solid var(--borda);padding:2.5rem 0 
 @media print{body>*:not(#cupom){display:none!important}#cupom{display:block!important;font-family:'Courier New',monospace;font-size:12px;width:72mm;padding:4mm;color:#000;background:#fff}}
 
 /* RESPONSIVE */
-@media(max-width:720px){.nav-links{display:none}.mobile-btn{display:block}.menu-grid{grid-template-columns:1fr 1fr}.cart-panel{width:100vw;right:-100vw}}
-@media(max-width:480px){.menu-grid{grid-template-columns:1fr}}
+ .fab-cart{display:none;position:fixed;bottom:1.1rem;right:1.1rem;z-index:60;width:60px;height:60px;border-radius:50%;background:var(--vermelho);color:#fff;border:none;font-size:1.5rem;cursor:pointer;box-shadow:0 8px 24px rgba(185,28,28,.45);align-items:center;justify-content:center;transition:transform .15s,background .2s}
+ .fab-cart:active{transform:scale(.92)}
+ .fab-badge{position:absolute;top:-4px;right:-4px;min-width:24px;height:24px;padding:0 6px;border-radius:9999px;background:var(--dourado);color:#1a1212;font-size:.78rem;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)}
+ @media(max-width:720px){.nav-links{display:none}.mobile-btn{display:block}.menu-grid{grid-template-columns:1fr 1fr;gap:.85rem}.cart-panel{width:100vw;right:-100vw}.fab-cart{display:flex}.cart-foot{padding-bottom:calc(1rem + env(safe-area-inset-bottom))}.cart-nome-field input,.cart-nome-field select,#obs-cliente{font-size:16px}}
+ @media(max-width:480px){.menu-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -260,7 +264,9 @@ footer{background:var(--bg2);border-top:1px solid var(--borda);padding:2.5rem 0 
   </div>
   <div class="cart-nome-field">
     <label>Horário de Retirada</label>
-    <input type="time" id="hora-retirada"/>
+    <select id="hora-retirada">
+      <option value="">Selecione um horário</option>
+    </select>
   </div>
   <div class="cart-nome-field">
     <label>Observação</label>
@@ -278,6 +284,10 @@ footer{background:var(--bg2);border-top:1px solid var(--borda);padding:2.5rem 0 
     </button>
   </div>
 </div>
+<button class="fab-cart" id="fab-cart" onclick="abrirCarrinho()" aria-label="Abrir carrinho">
+  🛒
+  <span class="fab-badge" id="cart-count-fab">0</span>
+</button>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -371,6 +381,8 @@ function updateCarrinho(){
   const count=carrinho.reduce((s,i)=>s+i.qty,0);
   document.getElementById('cart-count').textContent=count;
   document.getElementById('cart-count-m').textContent=count;
+  const fab=document.getElementById('cart-count-fab');
+  if(fab){fab.textContent=count;fab.style.display=count?'flex':'none';}
   document.getElementById('cart-total').textContent='R$ '+total.toFixed(2).replace('.',',');
   const list=document.getElementById('cart-list');
   if(!carrinho.length){list.innerHTML='<div class="cart-vazio">🛒<br>Carrinho vazio<br><small>Adicione itens do cardápio</small></div>';return}
@@ -481,7 +493,21 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 function initFirebase(config){try{if(firebase.apps.length)firebase.app().delete().then(()=>_fbConn(config));else _fbConn(config)}catch(e){}}
 function _fbConn(c){try{firebase.initializeApp(c);db=firebase.firestore();console.log('Firebase ✅')}catch(e){console.error(e)}}
 
-renderTabs();renderGrid();updateCarrinho();
+function gerarHorarios(){
+  const sel=document.getElementById('hora-retirada');
+  if(!sel)return;
+  const ini=11*60, fim=23*60; // 11:00 às 23:00
+  for(let m=ini;m<=fim;m+=30){
+    const h=String(Math.floor(m/60)).padStart(2,'0');
+    const min=String(m%60).padStart(2,'0');
+    const v=h+':'+min;
+    const o=document.createElement('option');
+    o.value=v;o.textContent=v;
+    sel.appendChild(o);
+  }
+}
+
+renderTabs();renderGrid();updateCarrinho();gerarHorarios();
 </script>
 </body>
 </html>
