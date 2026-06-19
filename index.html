@@ -259,6 +259,10 @@ footer{background:var(--bg2);border-top:1px solid var(--borda);padding:2.5rem 0 
     <input type="text" id="nome-cliente" placeholder="Ex: Maria Silva"/>
   </div>
   <div class="cart-nome-field">
+    <label>Horário de Retirada</label>
+    <input type="time" id="hora-retirada"/>
+  </div>
+  <div class="cart-nome-field">
     <label>Observação</label>
     <textarea id="obs-cliente" placeholder="Ex: Sem cebola, ponto da carne, endereço de entrega..."
       rows="3" style="width:100%;padding:.5rem .7rem;background:var(--card2);border:1px solid var(--borda);border-radius:8px;color:var(--texto);font-family:var(--fonte);font-size:.88rem;outline:none;transition:border-color .15s;resize:vertical;line-height:1.4;"
@@ -291,6 +295,7 @@ const CATS = [
   {id:'wraps',  nome:'Shawarmas',  icon:'🌯'},
   {id:'crepes', nome:'Crepes', icon:'🥞'},
   {id:'doces',  nome:'Doces',  icon:'🍬'},
+  {id:'pasteis', nome:'Pastéis', icon:'🥟'},
   {id:'bebidas', nome:'Bebidas', icon:'🥤'},
 ];
 
@@ -303,6 +308,9 @@ const ITENS = [
   {id:4,cat:'crepes', nome:'Crepe Ferrero Rocher',        desc:'Crepe com creme de avelã, Ferrero Rocher, coco ralado e chantilly',                  preco:32.90, destaque:true,  img:IMG.crepeF},
   {id:5,cat:'crepes', nome:'Crepe de Calabresa com Queijo', desc:'Crepe salgado com calabresa artesanal, mussarela derretida e molho de tomate',     preco:26.90, destaque:false, img:IMG.crepeCal},
   {id:6,cat:'doces',  nome:'Churros Gourmet',        desc:'Cones fritos com coberturas de chocolate, caramelo e granulados coloridos',          preco:18.90, destaque:false, img:IMG.cone},
+  {id:13,cat:'pasteis', nome:'Pastel de Carne',  desc:'Pastel crocante recheado com carne moída temperada e suculenta',         preco:12.90, destaque:false, img:'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-su4KFpossTkdmDxW7duoP7ktHmbuZT.png'},
+  {id:14,cat:'pasteis', nome:'Pastel de Pizza',  desc:'Pastel crocante com presunto, mussarela, tomate e orégano',              preco:12.90, destaque:false, img:'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-1BhDLGL7iXnbHQic8dwiK0RJTE8N0g.png'},
+  {id:15,cat:'pasteis', nome:'Pastel de Frango', desc:'Pastel crocante com frango desfiado, queijo derretido e milho',          preco:13.90, destaque:false, img:'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-v3dAo4NFOwKAl0jFzCGR8znUtq3vLZ.png'},
   {id:7,cat:'bebidas', nome:'Coca-Cola',       desc:'Refrigerante de cola sabor original, lata gelada 350ml',        preco:6.90, destaque:false, img:'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-u8BGRCOQxTAyWKGQ60RLOTR09gYrI1.png'},
   {id:8,cat:'bebidas', nome:'Guaraná Antarctica', desc:'Refrigerante de guaraná original do Brasil, lata gelada 350ml', preco:6.90, destaque:false, img:'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-APUZ53ys3Hxp5AjqNB0FMpqaiNAHI4.png'},
   {id:9,cat:'bebidas', nome:'Monster Energy',   desc:'Bebida energética gelada, lata 473ml',                          preco:12.90, destaque:false, img:'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-HnoZJ4rePGDHknxTEIehG16VOgKcB3.png'},
@@ -391,6 +399,7 @@ async function confirmarPedido(){
   if(!carrinho.length){toast('Carrinho vazio!');return}
 
   const nome  = document.getElementById('nome-cliente').value.trim()||'Cliente';
+  const retirada = document.getElementById('hora-retirada').value.trim();
   const obs   = document.getElementById('obs-cliente').value.trim();
   const total = carrinho.reduce((s,i)=>s+i.preco*i.qty,0);
   const agora = new Date();
@@ -399,6 +408,7 @@ async function confirmarPedido(){
 
   const pedido = {
     cliente:  nome,
+    retirada: retirada,
     obs:      obs,
     itens:    carrinho.map(i=>({nome:i.nome,preco:i.preco,qty:i.qty})),
     total,
@@ -423,6 +433,9 @@ async function confirmarPedido(){
   msg += '%E2%94%81%E2%94%81%E2%94%81%E2%94%81%E2%94%81%E2%94%81%E2%94%81%E2%94%81%E2%94%81%E2%94%81%0A';
   msg += '%F0%9F%91%A4 *Cliente:* ' + encodeURIComponent(nome) + '%0A';
   msg += '%F0%9F%93%85 *Data%2FHora:* ' + encodeURIComponent(data + ' às ' + hora) + '%0A';
+  if(retirada){
+    msg += '%E2%8F%B0 *Retirada às:* ' + encodeURIComponent(retirada) + '%0A';
+  }
   msg += '%E2%94%81%E2%94%81%E2%94%81%E2%94%81%E2%94%81%E2%94%81%E2%94%81%E2%94%81%E2%94%81%E2%94%81%0A';
   msg += '*Itens do pedido:*%0A';
   msg += linhasItens + '%0A';
@@ -442,6 +455,7 @@ async function confirmarPedido(){
   updateCarrinho();
   fecharCarrinho();
   document.getElementById('nome-cliente').value = '';
+  document.getElementById('hora-retirada').value = '';
   document.getElementById('obs-cliente').value  = '';
   btn.disabled    = false;
   btn.textContent = 'Finalizar Pedido 📲';
