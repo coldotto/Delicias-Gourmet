@@ -125,6 +125,8 @@ footer{background:var(--bg2);border-top:1px solid var(--borda);padding:2.5rem 0 
 .cart-nome-field input:focus,.cart-nome-field select:focus{border-color:var(--vermelho)}
 .cart-nome-field select{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c9973a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .75rem center;padding-right:2.2rem}
 .cart-nome-field select option{background:var(--card2);color:var(--texto)}
+.campo-obrig{color:var(--vermelho);font-weight:700}
+.cart-nome-field input.erro,.cart-nome-field select.erro{border-color:var(--vermelho);box-shadow:0 0 0 2px rgba(185,28,28,.25)}
 .cart-foot{padding:.9rem 1.25rem;border-top:1px solid var(--borda)}
 .cart-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem;font-size:.95rem;font-weight:600}
 .cart-total-val{font-family:var(--display);font-size:1.35rem;font-weight:700;color:var(--dourado)}
@@ -270,11 +272,11 @@ footer{background:var(--bg2);border-top:1px solid var(--borda);padding:2.5rem 0 
     <div class="cart-vazio">🛒<br>Carrinho vazio<br><small>Adicione itens do cardápio</small></div>
   </div>
   <div class="cart-nome-field">
-    <label>Nome do Cliente</label>
+    <label>Nome do Cliente <span class="campo-obrig">*</span></label>
     <input type="text" id="nome-cliente" placeholder="Ex: Maria Silva"/>
   </div>
   <div class="cart-nome-field">
-    <label>Horário de Retirada</label>
+    <label>Horário de Retirada <span class="campo-obrig">*</span></label>
     <select id="hora-retirada">
       <option value="">Selecione um horário</option>
     </select>
@@ -434,8 +436,28 @@ const WHATSAPP_NUMERO = '554598352808';
 async function confirmarPedido(){
   if(!carrinho.length){toast('Carrinho vazio!');return}
 
-  const nome  = document.getElementById('nome-cliente').value.trim()||'Cliente';
-  const retirada = document.getElementById('hora-retirada').value.trim();
+  const elNome = document.getElementById('nome-cliente');
+  const elRetirada = document.getElementById('hora-retirada');
+  const nomeVal = elNome.value.trim();
+  const retirada = elRetirada.value.trim();
+
+  // Validação: nome e horário de retirada são obrigatórios
+  elNome.classList.remove('erro');
+  elRetirada.classList.remove('erro');
+  if(!nomeVal){
+    elNome.classList.add('erro');
+    elNome.focus();
+    toast('Informe o nome do cliente!');
+    return;
+  }
+  if(!retirada){
+    elRetirada.classList.add('erro');
+    elRetirada.focus();
+    toast('Selecione o horário de retirada!');
+    return;
+  }
+
+  const nome  = nomeVal;
   const obs   = document.getElementById('obs-cliente').value.trim();
   const total = carrinho.reduce((s,i)=>s+i.preco*i.qty,0);
   const agora = new Date();
